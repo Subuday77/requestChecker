@@ -7,13 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
@@ -59,6 +59,7 @@ public class RequestCheckController {
             return new ResponseEntity<>(request, HttpStatus.OK);
         }
     }
+
     @GetMapping("/getallresults")
     public ResponseEntity<?> getAllResults() {
         return new ResponseEntity<>(requests, HttpStatus.OK);
@@ -69,5 +70,25 @@ public class RequestCheckController {
         request = new Request();
         requests.clear();
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/gettoken")
+    public ResponseEntity<?> generateToken(@RequestBody String data) {
+        String result = "";
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(data.getBytes());
+            result = bytesToHex(md.digest());
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+        return new ResponseEntity<String>(result, HttpStatus.OK);
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuffer result = new StringBuffer();
+        for (byte b : bytes) result.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
+        return result.toString();
     }
 }
